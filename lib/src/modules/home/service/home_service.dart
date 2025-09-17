@@ -12,22 +12,47 @@ class HomeService {
   HomeService({required this.viacepRepo, required this.localRepo});
 
   Future<AddressModel> getByCep(String cep) async {
-    final address = await viacepRepo.fetchByCep(cep);
-    await localRepo.save(address);
-    return address;
+    try {
+      final address = await viacepRepo.fetchByCep(cep);
+      await localRepo.save(address);
+      return address;
+    } catch (e) {
+      // Log adicional se necessário
+      rethrow;
+    }
   }
 
   Future<List<AddressModel>> searchAddress({
     required String uf,
     required String city,
     required String street,
-  }) {
-    return viacepRepo.searchByAddress(uf: uf, city: city, street: street);
+  }) async {
+    try {
+      return await viacepRepo.searchByAddress(
+        uf: uf,
+        city: city,
+        street: street,
+      );
+    } catch (e) {
+      rethrow;
+    }
   }
 
-  Future<List<AddressModel>> getHistory() => localRepo.getAll();
+  Future<List<AddressModel>> getHistory() async {
+    try {
+      return await localRepo.getAll();
+    } catch (e) {
+      rethrow;
+    }
+  }
 
-  Future<AddressModel?> getLast() => localRepo.getLast();
+  Future<AddressModel?> getLast() async {
+    try {
+      return await localRepo.getLast();
+    } catch (e) {
+      return null;
+    }
+  }
 
   Future<void> openMapForAddress(AddressModel address) async {
     final query =
@@ -49,7 +74,7 @@ class HomeService {
         }
       }
     } catch (e) {
-      // Se falhar, continua para abrir no navegador
+      print('Falha ao abrir app nativo: $e');
     }
     
     // Se não há apps nativos ou falhou, abre no navegador
@@ -59,7 +84,7 @@ class HomeService {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      throw Exception('Não foi possível abrir o mapa. URL: $googleMapsUrl');
+      throw Exception('Não foi possível abrir o mapa');
     }
   }
 }
