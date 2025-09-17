@@ -5,14 +5,43 @@ class EmptySearchWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: const [
-          Icon(Icons.search_off, size: 64, color: Colors.grey),
-          SizedBox(height: 12),
-          Text('Nenhum resultado. Tente buscar por um CEP ou endereço.'),
-        ],
+    return Container(
+      padding: const EdgeInsets.all(40),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF3B82F6).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(
+                Icons.search_off,
+                size: 48,
+                color: Color(0xFF3B82F6),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Nenhum resultado encontrado',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Tente buscar por um CEP válido',
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF6B7280),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
