@@ -30,7 +30,6 @@ class _HomePageState extends State<HomePage> {
     final localRepo = LocalRepository();
     final service = HomeService(viacepRepo: viacepRepo, localRepo: localRepo);
     controller = HomeController(service: service, localRepo: localRepo);
-    controller.loadHistory();
 
     _disposer = reaction<String?>((_) => controller.error, (error) {
       if (error != null && mounted) {
@@ -171,13 +170,13 @@ class _HomePageState extends State<HomePage> {
                     ),
                   );
                 }
-                if (controller.address == null && controller.history.isEmpty) {
+                if (controller.address == null) {
                   return const EmptySearchWidget();
                 }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (controller.address != null || controller.history.isNotEmpty) ...[
+                if (controller.address != null) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       const Text(
                         'Último Endereço',
                         style: TextStyle(
@@ -187,10 +186,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 8),
                       LastAddressWidget(
-                        address: controller.address ??
-                            (controller.history.isNotEmpty
-                                ? controller.history.first
-                                : null),
+                        address: controller.address!,
                         onNavigate: () async {
                           try {
                             await controller.openMapForLastAddress();
@@ -201,26 +197,10 @@ class _HomePageState extends State<HomePage> {
                           }
                         },
                       ),
-                      const SizedBox(height: 16),
                     ],
-                    if (controller.history.isNotEmpty) ...[
-                      const Text(
-                        'Histórico',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      AddressListWidget(
-                        items: controller.history.toList(),
-                        onTap: (AddressModel a) {
-                          controller.address = a;
-                        },
-                      ),
-                    ],
-                  ],
-                );
+                  );
+                }
+                return const EmptySearchWidget();
               },
               ),
           ],

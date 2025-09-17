@@ -1,6 +1,8 @@
 import 'package:fast_location/src/shared/storage/app_storage.dart';
 import 'package:flutter/material.dart';
 import 'src/modules/home/page/home_page.dart';
+import 'src/modules/history/page/history_page.dart';
+import 'src/routes/app_routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,7 +70,11 @@ class FastLocationApp extends StatelessWidget {
         ),
       ),
       debugShowCheckedModeBanner: false,
-      home: const HomePage(),
+      initialRoute: AppRoutes.home,
+      routes: {
+        AppRoutes.home: (context) => const HomePage(),
+        AppRoutes.history: (context) => const HistoryPage(),
+      },
     );
   }
 }
