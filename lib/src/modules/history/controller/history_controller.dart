@@ -4,9 +4,7 @@ import '../../home/service/home_service.dart';
 
 part 'history_controller.g.dart';
 
-class HistoryController extends _HistoryControllerBase {
-  HistoryController({required HomeService service}) : super(service: service);
-}
+class HistoryController = _HistoryControllerBase with _$HistoryController;
 
 abstract class _HistoryControllerBase with Store {
   final HomeService service;
@@ -37,60 +35,98 @@ abstract class _HistoryControllerBase with Store {
   @observable
   String searchStreet = '';
 
+  // Adicionar um controle para evitar múltiplas chamadas simultâneas
+  bool _isLoadingHistory = false;
+  bool _isSearching = false;
+
   @action
   Future<void> loadHistory() async {
+    // Prevenir múltiplas chamadas simultâneas
+    if (_isLoadingHistory) return;
+    
+    _isLoadingHistory = true;
     loading = true;
     error = null;
+    
     try {
       final list = await service.getHistory();
-      history = ObservableList<AddressModel>.of(list);
+      runInAction(() {
+        history = ObservableList<AddressModel>.of(list);
+      });
     } catch (e) {
-      error = e.toString();
+      runInAction(() {
+        error = e.toString();
+      });
     } finally {
-      loading = false;
+      runInAction(() {
+        loading = false;
+        _isLoadingHistory = false;
+      });
     }
   }
 
   @action
   Future<void> searchByAddress() async {
+    // Prevenir múltiplas buscas simultâneas
+    if (_isSearching) return;
+    
     if (searchUf.isEmpty || searchCity.isEmpty || searchStreet.isEmpty) {
-      error = 'Preencha todos os campos para buscar';
+      runInAction(() {
+        error = 'Preencha todos os campos para buscar';
+      });
       return;
     }
 
-    isSearching = true;
-    error = null;
+    _isSearching = true;
+    
+    runInAction(() {
+      isSearching = true;
+      error = null;
+    });
+
     try {
       final results = await service.searchAddress(
         uf: searchUf,
         city: searchCity,
         street: searchStreet,
       );
-      searchResults = ObservableList<AddressModel>.of(results);
+      
+      runInAction(() {
+        searchResults = ObservableList<AddressModel>.of(results);
+        isSearching = false;
+        _isSearching = false;
+      });
     } catch (e) {
-      error = e.toString();
-      searchResults.clear();
-    } finally {
-      isSearching = false;
+      runInAction(() {
+        error = e.toString();
+        searchResults.clear();
+        isSearching = false;
+        _isSearching = false;
+      });
     }
   }
 
+  @action
   void clearSearch() {
     searchResults.clear();
     searchUf = '';
     searchCity = '';
     searchStreet = '';
     error = null;
+    _isSearching = false;
   }
 
+  @action
   void setSearchUf(String value) {
     searchUf = value;
   }
 
+  @action
   void setSearchCity(String value) {
     searchCity = value;
   }
 
+  @action
   void setSearchStreet(String value) {
     searchStreet = value;
   }
@@ -100,18 +136,29 @@ abstract class _HistoryControllerBase with Store {
     try {
       await service.openMapForAddress(address);
     } catch (e) {
-      error = e.toString();
+      runInAction(() {
+        error = e.toString();
+      });
     }
   }
 
   @action
   Future<void> saveAddressToHistory(AddressModel address) async {
     try {
-      // O método getByCep já salva automaticamente no histórico
+      // Usar o método getByCep que já salva automaticamente no histórico
       await service.getByCep(address.cep);
+      // Recarregar o histórico após salvar
       await loadHistory();
     } catch (e) {
-      error = e.toString();
+      runInAction(() {
+        error = e.toString();
+      });
     }
+  }
+
+  // Dispose para limpar recursos se necessário
+  void dispose() {
+    _isLoadingHistory = false;
+    _isSearching = false;
   }
 }

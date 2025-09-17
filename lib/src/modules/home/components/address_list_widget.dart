@@ -4,8 +4,16 @@ import '../model/address_model.dart';
 class AddressListWidget extends StatelessWidget {
   final List<AddressModel> items;
   final ValueChanged<AddressModel>? onTap;
+  final void Function(AddressModel)? onSave;
+  final void Function(AddressModel)? onOpenMap;
 
-  const AddressListWidget({super.key, required this.items, this.onTap});
+  const AddressListWidget({
+    super.key,
+    required this.items,
+    this.onTap,
+    this.onSave,
+    this.onOpenMap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -64,9 +72,20 @@ class AddressListWidget extends StatelessWidget {
                 fontSize: 13,
               ),
             ),
-            trailing: const Icon(
-              Icons.chevron_right,
-              color: Color(0xFF9CA3AF),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.map, color: Color(0xFF10B981)),
+                  tooltip: 'Abrir no mapa',
+                  onPressed: () => onOpenMap?.call(a),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.save, color: Color(0xFF3B82F6)),
+                  tooltip: 'Salvar no histórico',
+                  onPressed: () => onSave?.call(a),
+                ),
+              ],
             ),
             onTap: () => onTap?.call(a),
           ),
