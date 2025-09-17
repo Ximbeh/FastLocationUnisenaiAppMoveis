@@ -59,6 +59,7 @@ class _HomePageState extends State<HomePage> {
     controller.searchByCep(cep);
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,58 +73,121 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              TextField(
-                controller: cepController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'CEP',
-                  hintText: 'Digite o CEP (somente números ou com traço)',
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Seção de busca
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3B82F6).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.search,
+                            color: Color(0xFF3B82F6),
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Buscar CEP',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: cepController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'CEP',
+                        hintText: 'Digite o CEP (ex: 12345-678)',
+                        prefixIcon: Icon(Icons.location_on, color: Color(0xFF3B82F6)),
+                        suffixIcon: Icon(Icons.clear, color: Colors.grey),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _searchCep,
+                            icon: const Icon(Icons.search),
+                            label: const Text('Buscar'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: () async {
+                            try {
+                              await controller.openMapForLastAddress();
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(e.toString()),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF10B981),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Icon(Icons.navigation),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _searchCep,
-                      child: const Text('Buscar CEP'),
+            ),
+            const SizedBox(height: 16),
+            // Conteúdo dinâmico
+            Observer(
+              builder: (_) {
+                if (controller.loading) {
+                  return const Center(
+                    child: Column(
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('Buscando endereço...'),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: () async {
-                      try {
-                        await controller.openMapForLastAddress();
-                      } catch (e) {
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: Text(e.toString())));
-                      }
-                    },
-                    child: const Icon(Icons.navigation),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Observer(
-                builder: (_) {
-                  if (controller.loading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (controller.address == null &&
-                      controller.history.isEmpty) {
-                    return const EmptySearchWidget();
-                  }
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
+                  );
+                }
+                if (controller.address == null && controller.history.isEmpty) {
+                  return const EmptySearchWidget();
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (controller.address != null || controller.history.isNotEmpty) ...[
+                      const Text(
+                        'Último Endereço',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       LastAddressWidget(
-                        address:
-                            controller.address ??
+                        address: controller.address ??
                             (controller.history.isNotEmpty
                                 ? controller.history.first
                                 : null),
@@ -137,24 +201,29 @@ class _HomePageState extends State<HomePage> {
                           }
                         },
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
+                    ],
+                    if (controller.history.isNotEmpty) ...[
                       const Text(
                         'Histórico',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
+                      const SizedBox(height: 8),
                       AddressListWidget(
                         items: controller.history.toList(),
                         onTap: (AddressModel a) {
-                          // ao tocar, mostra detalhes como último selecionado
                           controller.address = a;
                         },
                       ),
                     ],
-                  );
-                },
+                  ],
+                );
+              },
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );
